@@ -18,7 +18,8 @@ Portfolio analyzer for US equities and ETFs (NYSE and NASDAQ). The user enters t
 | Suggestions | No turnover limit. May include **new tickers**. Expressed as concrete buy/sell $ amounts. |
 | Budget | Free data sources by default. Paid services are used only when the user supplies their own API key (see §2). |
 | Stack | Polish over speed: **Next.js (React + TypeScript) frontend + FastAPI backend**. |
-| Users | Single user (owner), runs locally or on a private deploy. No login system in Phase 1. |
+| Users | Single user (owner). Hosted as a **web app**, protected by a single password login (it holds your portfolio data). |
+| Hosting | Free tiers: frontend on **Vercel**, backend on **Render** (or Fly.io), database on **Neon** (free Postgres). |
 | Language | English only. |
 
 > Every screen shows the disclaimer: *"For informational purposes only, not investment advice."*
@@ -70,7 +71,7 @@ Out of scope for Phase 1: user accounts, broker sync, real-time streaming quotes
 - Frontend: `next`, `react`, `typescript`, `@tanstack/react-query`, `plotly.js` (heatmaps, frontier) or `recharts`, `tailwindcss`
 
 ### Data provider abstraction
-`MarketDataProvider` interface: `get_prices(tickers, start, end)`, `get_profile(ticker)` (exchange, sector, industry, market cap, beta, ETF flag), `get_fundamentals(ticker)`, `get_news(tickers, since)`. Caching: daily prices are cached for 24h, profiles for 7 days, and news for 15 minutes. Storage is a local **SQLite** file (cache + saved reviews), which fits a single user.
+`MarketDataProvider` interface: `get_prices(tickers, start, end)`, `get_profile(ticker)` (exchange, sector, industry, market cap, beta, ETF flag), `get_fundamentals(ticker)`, `get_news(tickers, since)`. Caching: daily prices are cached for 24h, profiles for 7 days, and news for 15 minutes. Storage is **Postgres** (Neon free tier) for saved portfolio, reviews and cache. SQLite is used for local development.
 
 ### Cost policy: free by default, paid only with your own key
 | Need | Default (free) | Optional upgrade (user supplies key in `.env` / settings page) |
@@ -92,7 +93,7 @@ The app works end to end with no paid key. A settings page shows which providers
   - The ticker resolves through the provider and is listed on NYSE, NASDAQ, NYSE American, or NYSE Arca. Stocks and ETFs are both accepted, and ETFs are labeled.
   - Amounts must be positive. No duplicate tickers.
   - Each ticker needs 1 year of price history. If it has less, the app warns and uses what is available.
-- The current portfolio is saved in SQLite and loaded on the next visit.
+- The current portfolio is saved in the database and loaded on the next visit.
 
 ### F2: Overview dashboard
 **KPI tiles:** total value ($) · 1D / 1M / 3M / YTD / 1Y return · annualized volatility · Sharpe · Sortino · max drawdown · beta vs benchmark · weighted dividend yield · weighted P/E · number of holdings / effective N (1/HHI).
@@ -204,10 +205,10 @@ gini_minnie/
 | **M3: Risk & Correlation** | Heatmap, risk contribution, rolling metrics, VaR, efficient frontier with locks | 1 week |
 | **M4: What-if** | `/whatif`, funding modes, before/after comparison, generated verdict | 4–5 days |
 | **M5: News & Suggestions** | News provider, FinBERT scoring + optional Claude scoring, aggregation, suggestion engine with trade list and new-ticker candidates, UI | 1.5 weeks |
-| **M5b: Review history** | Snapshots in SQLite, "since last review" panel, timeline | 3–4 days |
-| **M6: Polish** | Design pass, dark mode, error states, loading skeletons, responsive layout, disclaimers, one-command local run (`docker compose up`) | 1 week |
+| **M5b: Review history** | Snapshots in the database, "since last review" panel, timeline | 3–4 days |
+| **M6: Polish** | Design pass, dark mode, error states, loading skeletons, responsive layout, disclaimers, password login, deploy to Vercel + Render + Neon | 1 week |
 
-Total: about **6–7 weeks** for one developer.
+Total: about **6–7 weeks** for one human developer working full time. Built with Claude Code, the code is written much faster. The real pace is set by review and testing rounds with real portfolio data.
 
 ---
 
@@ -231,5 +232,6 @@ Total: about **6–7 weeks** for one developer.
 
 ## 9. Remaining open items
 1. Default minimum weight for locked holdings: 2% proposed.
-2. Candidate universe for new-ticker suggestions: S&P 500 + Nasdaq-100 + major ETFs proposed.
-3. Hosting: run locally only (`docker compose up`), or a private cloud deploy as well?
+   *(Under discussion: the floor only exists so an optimizer cannot shrink a locked holding to a near-zero, meaningless position.)*
+2. ~~Candidate universe~~: confirmed, S&P 500 + Nasdaq-100 + major ETFs.
+3. ~~Hosting~~: confirmed, web app (see Decisions).
