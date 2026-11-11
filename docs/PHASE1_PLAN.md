@@ -10,7 +10,7 @@ Portfolio analyzer for US equities and ETFs (NYSE and NASDAQ). The user enters t
 
 | Topic | Decision |
 |-------|----------|
-| Lock meaning | A locked ticker is **never removed** from the portfolio. Its weight may be trimmed or increased, but stays above a minimum floor (default 2%, adjustable per holding). |
+| Lock meaning | A locked ticker is **never sold** (not removed, not trimmed). Suggestions may only keep it or buy more. |
 | ETFs | Allowed (e.g. SPY, QQQ, sector ETFs). |
 | Inputs | **Dollar amounts** per ticker. The app computes the percentages and the total. |
 | Benchmark | User-selectable (default SPY; QQQ, DIA, IWM, or any valid ticker). |
@@ -19,7 +19,7 @@ Portfolio analyzer for US equities and ETFs (NYSE and NASDAQ). The user enters t
 | Budget | Free data sources by default. Paid services are used only when the user supplies their own API key (see §2). |
 | Stack | Polish over speed: **Next.js (React + TypeScript) frontend + FastAPI backend**. |
 | Users | Single user (owner). Hosted as a **web app**, protected by a single password login (it holds your portfolio data). |
-| Hosting | Free tiers: frontend on **Vercel**, backend on **Render** (or Fly.io), database on **Neon** (free Postgres). |
+| Hosting | Free tiers: frontend on **Vercel**, backend on **Render** (or Fly.io), database on **Supabase** (owner's existing free account; Postgres + Supabase Auth for the login). |
 | Language | English only. |
 
 > Every screen shows the disclaimer: *"For informational purposes only, not investment advice."*
@@ -71,7 +71,7 @@ Out of scope for Phase 1: user accounts, broker sync, real-time streaming quotes
 - Frontend: `next`, `react`, `typescript`, `@tanstack/react-query`, `plotly.js` (heatmaps, frontier) or `recharts`, `tailwindcss`
 
 ### Data provider abstraction
-`MarketDataProvider` interface: `get_prices(tickers, start, end)`, `get_profile(ticker)` (exchange, sector, industry, market cap, beta, ETF flag), `get_fundamentals(ticker)`, `get_news(tickers, since)`. Caching: daily prices are cached for 24h, profiles for 7 days, and news for 15 minutes. Storage is **Postgres** (Neon free tier) for saved portfolio, reviews and cache. SQLite is used for local development.
+`MarketDataProvider` interface: `get_prices(tickers, start, end)`, `get_profile(ticker)` (exchange, sector, industry, market cap, beta, ETF flag), `get_fundamentals(ticker)`, `get_news(tickers, since)`. Caching: daily prices are cached for 24h, profiles for 7 days, and news for 15 minutes. Storage is **Postgres** on Supabase for saved portfolio, reviews and cache. SQLite is used for local development.
 
 ### Cost policy: free by default, paid only with your own key
 | Need | Default (free) | Optional upgrade (user supplies key in `.env` / settings page) |
@@ -87,7 +87,7 @@ The app works end to end with no paid key. A settings page shows which providers
 ## 3. Feature details
 
 ### F1: Portfolio input
-- Editable table: `Ticker | Amount ($) | Weight % (computed) | Lock 🔒 | Min weight (if locked) | (remove)`. Also supports CSV paste or upload.
+- Editable table: `Ticker | Amount ($) | Weight % (computed) | Lock 🔒 | (remove)`. Also supports CSV paste or upload.
 - Total portfolio value = sum of amounts. Weights update live as amounts change.
 - Validation:
   - The ticker resolves through the provider and is listed on NYSE, NASDAQ, NYSE American, or NYSE Arca. Stocks and ETFs are both accepted, and ETFs are labeled.
@@ -114,13 +114,13 @@ The app works end to end with no paid key. A settings page shows which providers
 - **Efficient frontier** (Monte Carlo cloud plus the optimized curve) with the current portfolio plotted on it. **Locked weights are fixed constraints.**
 
 ### F4: Locked assets
-- Optimizer constraint for locked tickers: `w_i ≥ min_w_i` (default 2%, adjustable per holding). Locked tickers can be trimmed or increased but never dropped.
-- The UI shows a lock icon everywhere. Suggestions and what-if funding never remove a locked holding.
+- A locked holding is never sold. Its dollar amount can only stay the same or grow. Because other holdings change, its *weight* may still shift; the constraint is on dollars: `amount_i_after ≥ amount_i_now`.
+- The UI shows a lock icon everywhere. Suggestions and what-if funding never sell a locked holding.
 - The insights panel reports how much the locks cost: "Your locked assets account for X% of portfolio risk."
 
 ### F5: What-if: add a new ticker
 - Inputs: ticker and **amount to invest ($)**, with an option to **add new cash** or **fund from existing holdings**. Funding methods when reallocating:
-  - **Pro-rata:** reduce holdings proportionally (locked ones not below their floor). This is the default.
+  - **Pro-rata:** reduce holdings proportionally (locked ones excluded). This is the default.
   - **Sell specific:** take the weight from chosen holdings.
   - **Optimizer-chosen:** the optimizer decides, with locks respected.
 - Outputs:
@@ -170,7 +170,7 @@ Model choice (only if a Claude key is supplied): a fast, cheap model (e.g. Claud
 | GET | `/api/reviews/compare?from=&to=` | "Since last review" comparison |
 | GET | `/api/settings/providers` | Which data/news/LLM providers are active |
 
-`Holding = { ticker: str, amount_usd: float, locked: bool, min_weight?: float }`
+`Holding = { ticker: str, amount_usd: float, locked: bool }`
 
 ---
 
@@ -206,7 +206,7 @@ gini_minnie/
 | **M4: What-if** | `/whatif`, funding modes, before/after comparison, generated verdict | 4–5 days |
 | **M5: News & Suggestions** | News provider, FinBERT scoring + optional Claude scoring, aggregation, suggestion engine with trade list and new-ticker candidates, UI | 1.5 weeks |
 | **M5b: Review history** | Snapshots in the database, "since last review" panel, timeline | 3–4 days |
-| **M6: Polish** | Design pass, dark mode, error states, loading skeletons, responsive layout, disclaimers, password login, deploy to Vercel + Render + Neon | 1 week |
+| **M6: Polish** | Design pass, dark mode, error states, loading skeletons, responsive layout, disclaimers, Supabase Auth login, deploy to Vercel + Render + Supabase | 1 week |
 
 Total: about **6–7 weeks** for one human developer working full time. Built with Claude Code, the code is written much faster. The real pace is set by review and testing rounds with real portfolio data.
 
@@ -230,8 +230,16 @@ Total: about **6–7 weeks** for one human developer working full time. Built wi
 
 ---
 
-## 9. Remaining open items
-1. Default minimum weight for locked holdings: 2% proposed.
-   *(Under discussion: the floor only exists so an optimizer cannot shrink a locked holding to a near-zero, meaningless position.)*
-2. ~~Candidate universe~~: confirmed, S&P 500 + Nasdaq-100 + major ETFs.
-3. ~~Hosting~~: confirmed, web app (see Decisions).
+## 9. Accounts needed (all free)
+| Service | Purpose | Status |
+|---------|---------|--------|
+| GitHub | Code, CI, keep-alive job | ✅ |
+| Supabase | Database + login | ✅ owner has an account |
+| Vercel | Hosts the frontend | Sign in with GitHub |
+| Render | Hosts the backend | Sign in with GitHub |
+| Finnhub | Free news API key | Sign up |
+| Anthropic (optional) | Claude key for richer news analysis | Only if wanted |
+
+**Note on Supabase free tier:** projects pause after about 7 days without activity. With reviews every 2–4 weeks this would happen between reviews. A small scheduled GitHub Actions job pings the database every few days to keep it awake (free).
+
+All open items from earlier rounds are resolved.
