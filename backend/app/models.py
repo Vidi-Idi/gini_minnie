@@ -1,6 +1,11 @@
 from pydantic import BaseModel, Field, field_validator
 
 
+def normalize_ticker(v: str) -> str:
+    """Upper-case and use Yahoo's class-share format (BRK.B -> BRK-B)."""
+    return v.strip().upper().replace(".", "-")
+
+
 class Holding(BaseModel):
     """One position as entered by the user: a ticker and the dollar amount held."""
 
@@ -10,8 +15,8 @@ class Holding(BaseModel):
 
     @field_validator("ticker")
     @classmethod
-    def normalize_ticker(cls, v: str) -> str:
-        return v.strip().upper()
+    def _normalize_ticker(cls, v: str) -> str:
+        return normalize_ticker(v)
 
 
 class Portfolio(BaseModel):

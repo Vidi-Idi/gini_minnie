@@ -10,7 +10,10 @@ See [`docs/PHASE1_PLAN.md`](docs/PHASE1_PLAN.md) for the full Phase 1 plan.
 |-----------|-------|
 | M0 Setup: FastAPI backend, Next.js frontend, CI | ✅ |
 | Portfolio input: $ amounts, computed weights, locks | ✅ (saved in the browser for now) |
-| M1 Market data layer | Next |
+| M1 Market data layer: Yahoo Finance prices and profiles, NYSE/NASDAQ validation, cache | ✅ |
+| M2 Overview: KPIs, performance vs chosen benchmark, drawdown, sectors (ETF look-through), holdings | ✅ |
+| M3 Risk: correlation heatmap and risk contribution | ✅ first version (efficient frontier and VaR next) |
+| M4 What-if: add a ticker | Next |
 
 ## Project layout
 

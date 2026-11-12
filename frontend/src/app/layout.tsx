@@ -14,7 +14,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased">
-        <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+        <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
           <header className="mb-8 flex items-baseline justify-between">
             <h1 className="text-xl font-semibold tracking-tight">gini_minnie</h1>
             <span className="text-sm text-muted">Portfolio analyzer · NYSE &amp; NASDAQ</span>

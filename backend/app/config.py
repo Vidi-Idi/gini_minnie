@@ -12,6 +12,10 @@ class Settings(BaseSettings):
     cors_origins: str = "http://localhost:3000"
     # Database URL (Supabase Postgres in production, SQLite locally).
     database_url: str = "sqlite:///./gini_minnie.db"
+    # Local cache for market data (safe to delete).
+    cache_path: str = "./.cache/market.sqlite"
+    # Annual risk-free rate used for Sharpe and Sortino (approx. 3-month T-bill).
+    risk_free_rate: float = 0.04
     # Optional provider keys. Free sources are used when these are empty.
     finnhub_api_key: str = ""
     anthropic_api_key: str = ""

@@ -32,7 +32,7 @@ export function validate(rows: HoldingInput[]): Record<string, string> {
   const errors: Record<string, string> = {};
   const seen = new Set<string>();
   for (const r of rows) {
-    const t = r.ticker.trim().toUpperCase();
+    const t = r.ticker.trim().toUpperCase().replace(/\./g, "-");
     if (!t && !r.amount.trim()) continue; // empty row, ignored
     if (!TICKER_RE.test(t)) errors[r.id] = "Enter a valid ticker symbol";
     else if (seen.has(t)) errors[r.id] = "Duplicate ticker";
@@ -46,3 +46,13 @@ export const usd = (n: number) =>
   n.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
 
 export const pct = (n: number) => `${(n * 100).toFixed(1)}%`;
+
+/** Signed percent, e.g. "+12.3%" or "−4.1%" (true minus sign). */
+export const signedPct = (n: number | null | undefined, digits = 1) =>
+  n == null ? "—" : `${n >= 0 ? "+" : "−"}${Math.abs(n * 100).toFixed(digits)}%`;
+
+export const num = (n: number | null | undefined, digits = 2) =>
+  n == null ? "—" : n.toFixed(digits);
+
+/** Same normalization as the backend: upper-case, BRK.B -> BRK-B. */
+export const normalizeTicker = (t: string) => t.trim().toUpperCase().replace(/\./g, "-");
