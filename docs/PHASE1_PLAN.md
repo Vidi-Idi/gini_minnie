@@ -19,7 +19,7 @@ Portfolio analyzer for US equities and ETFs (NYSE and NASDAQ). The user enters t
 | Budget | Free data sources by default. Paid services are used only when the user supplies their own API key (see §2). |
 | Stack | Polish over speed: **Next.js (React + TypeScript) frontend + FastAPI backend**. |
 | Users | Single user (owner). Hosted as a **web app**, protected by a single password login (it holds your portfolio data). |
-| Hosting | Free tiers: frontend on **Vercel**, backend on **Render** (or Fly.io), database on **Supabase** (owner's existing free account; Postgres + Supabase Auth for the login). |
+| Hosting | Free tiers: frontend and backend on **Vercel** (two projects, Hobby plan, no credit card), database on **Supabase** (owner's existing free account; Postgres + Supabase Auth for the login). |
 | Language | English only. |
 
 > Every screen shows the disclaimer: *"For informational purposes only, not investment advice."*
@@ -206,7 +206,7 @@ gini_minnie/
 | **M4: What-if** | `/whatif`, funding modes, before/after comparison, generated verdict | 4–5 days |
 | **M5: News & Suggestions** | News provider, FinBERT scoring + optional Claude scoring, aggregation, suggestion engine with trade list and new-ticker candidates, UI | 1.5 weeks |
 | **M5b: Review history** | Snapshots in the database, "since last review" panel, timeline | 3–4 days |
-| **M6: Polish** | Design pass, dark mode, error states, loading skeletons, responsive layout, disclaimers, Supabase Auth login, deploy to Vercel + Render + Supabase | 1 week |
+| **M6: Polish** | Design pass, dark mode, error states, loading skeletons, responsive layout, disclaimers, Supabase Auth login, deploy to Vercel + Supabase | 1 week |
 
 Total: about **6–7 weeks** for one human developer working full time. Built with Claude Code, the code is written much faster. The real pace is set by review and testing rounds with real portfolio data.
 
@@ -235,8 +235,7 @@ Total: about **6–7 weeks** for one human developer working full time. Built wi
 |---------|---------|--------|
 | GitHub | Code, CI, keep-alive job | ✅ |
 | Supabase | Database + login | ✅ owner has an account |
-| Vercel | Hosts the frontend | Sign in with GitHub |
-| Render | Hosts the backend | Sign in with GitHub |
+| Vercel | Hosts the frontend and the backend | Sign in with GitHub |
 | Finnhub | Free news API key | Sign up |
 | Anthropic (optional) | Claude key for richer news analysis | Only if wanted |
 

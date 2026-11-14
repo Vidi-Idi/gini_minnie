@@ -1,7 +1,7 @@
 export const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000").replace(/\/$/, "");
 
 /**
- * The free backend plan sleeps when idle and needs 30–60s to wake up.
+ * The serverless backend needs a few seconds to start after a quiet period.
  * Called when the page opens, so it is usually awake by the time you click Analyze.
  */
 export function wakeBackend(): void {

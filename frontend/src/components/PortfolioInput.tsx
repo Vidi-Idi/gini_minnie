@@ -260,7 +260,7 @@ export default function PortfolioInput() {
         </div>
         {slow && (
           <p className="text-sm text-muted">
-            Waking up the analysis server. The first request after a quiet period can take up to a
+            Starting the analysis server. The first request after a quiet period can take up to a
             minute.
           </p>
         )}
