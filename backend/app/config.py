@@ -25,7 +25,21 @@ class Settings(BaseSettings):
 
     @property
     def cors_origin_list(self) -> list[str]:
-        return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
+        """Origins from CORS_ORIGINS, forgiving common copy-paste mistakes.
+
+        Browsers send the origin without a trailing slash or path, so
+        "https://x.vercel.app/" or "x.vercel.app" would never match as typed.
+        """
+        out = []
+        for raw in self.cors_origins.replace("\n", ",").split(","):
+            o = raw.strip().strip("'\"").strip()
+            if not o:
+                continue
+            if "://" not in o:
+                o = "https://" + o
+            scheme, rest = o.split("://", 1)
+            out.append(f"{scheme.lower()}://{rest.split('/', 1)[0].lower()}")
+        return list(dict.fromkeys(out))
 
 
 @lru_cache

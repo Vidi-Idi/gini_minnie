@@ -19,6 +19,12 @@ app.include_router(portfolio.router)
 app.include_router(tickers.router)
 
 
+@app.get("/")
+def root() -> dict[str, str]:
+    return {"message": "gini_minnie API is running. Health check: /api/health"}
+
+
 @app.get("/api/health")
-def health() -> dict[str, str]:
-    return {"status": "ok"}
+def health() -> dict[str, object]:
+    # Allowed origins are public website addresses, shown here to make setup easy to check.
+    return {"status": "ok", "allowed_origins": settings.cors_origin_list}

@@ -13,7 +13,29 @@ def make(*items: tuple[str, float, bool]) -> Portfolio:
 
 
 def test_health():
-    assert client.get("/api/health").json() == {"status": "ok"}
+    body = client.get("/api/health").json()
+    assert body["status"] == "ok"
+    assert isinstance(body["allowed_origins"], list)
+
+
+@pytest.mark.parametrize(
+    "raw, expected",
+    [
+        ("https://a.vercel.app", ["https://a.vercel.app"]),
+        ("https://a.vercel.app/", ["https://a.vercel.app"]),
+        (' "https://A.vercel.app/path" ', ["https://a.vercel.app"]),
+        ("a.vercel.app", ["https://a.vercel.app"]),
+        (
+            "http://localhost:3000, https://b.vercel.app/",
+            ["http://localhost:3000", "https://b.vercel.app"],
+        ),
+        ("", []),
+    ],
+)
+def test_cors_origins_are_normalized(raw, expected):
+    from app.config import Settings
+
+    assert Settings(cors_origins=raw).cors_origin_list == expected
 
 
 def test_summary_weights_from_dollars():
