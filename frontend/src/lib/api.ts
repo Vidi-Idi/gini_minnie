@@ -1,4 +1,12 @@
-export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+export const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000").replace(/\/$/, "");
+
+/**
+ * The free backend plan sleeps when idle and needs 30–60s to wake up.
+ * Called when the page opens, so it is usually awake by the time you click Analyze.
+ */
+export function wakeBackend(): void {
+  fetch(`${API_URL}/api/health`).catch(() => {});
+}
 
 export type Slice = { label: string; weight: number };
 
@@ -72,7 +80,9 @@ export async function analyzePortfolio(
       body: JSON.stringify({ holdings, benchmark }),
     });
   } catch {
-    throw new AnalyzeError("Could not reach the analysis server. Is the backend running?");
+    throw new AnalyzeError(
+      "Could not reach the analysis server. If it was asleep, wait a few seconds and try again.",
+    );
   }
   if (res.ok) return res.json();
   const body = await res.json().catch(() => ({}));

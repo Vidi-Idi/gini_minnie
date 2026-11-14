@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Analysis, AnalyzeError, analyzePortfolio } from "@/lib/api";
+import { Analysis, AnalyzeError, analyzePortfolio, wakeBackend } from "@/lib/api";
 import {
   HoldingInput,
   normalizeTicker,
@@ -56,6 +56,21 @@ export default function PortfolioInput() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [serverErrors, setServerErrors] = useState<Record<string, string>>({});
+
+  const [slow, setSlow] = useState(false);
+
+  useEffect(() => {
+    wakeBackend();
+  }, []);
+
+  useEffect(() => {
+    if (!loading) return;
+    const t = setTimeout(() => setSlow(true), 6000);
+    return () => {
+      clearTimeout(t);
+      setSlow(false);
+    };
+  }, [loading]);
 
   useEffect(() => {
     try {
@@ -243,6 +258,12 @@ export default function PortfolioInput() {
             {loading ? "Analyzing…" : analysis ? "Re-analyze" : "Analyze portfolio"}
           </button>
         </div>
+        {slow && (
+          <p className="text-sm text-muted">
+            Waking up the analysis server. The first request after a quiet period can take up to a
+            minute.
+          </p>
+        )}
         {error && (
           <p role="alert" className="text-sm text-danger">
             {error}

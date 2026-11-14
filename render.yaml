@@ -1,0 +1,20 @@
+# Render Blueprint: deploys the backend API (free plan).
+# In Render: New + -> Blueprint -> pick this repo.
+services:
+  - type: web
+    name: gini-minnie-api
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.8"
+      - key: CACHE_PATH
+        value: /tmp/market-cache.sqlite
+      # Set to your Vercel URL after the frontend is deployed, e.g. https://gini-minnie.vercel.app
+      - key: CORS_ORIGINS
+        sync: false
